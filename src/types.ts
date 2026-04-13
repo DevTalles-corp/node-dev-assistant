@@ -50,13 +50,13 @@ export interface AppConfig
 {
     provider: ModelProvider;
     anthropicApiKey: string;
-    openiaApiKey: string;
+    openaiApiKey: string;
     anthropicModel: string;
     openaiModel: string;
-    openiaEmbeddingModel: string;
+    openaiEmbeddingModel: string;
     docsPath: string;
     dbPath: string;
-    rangTopK: number;
+    ragTopK: number;
 }
 
 export interface AgentResponse
