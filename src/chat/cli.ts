@@ -43,8 +43,8 @@ export async function startCLI(): Promise<void>
             if (userInput === "/exit" || userInput === "/salida") {
                 const stats = conversation.getStats();
                 console.log(` Resumen: ${stats.turns} turnos `+
-                    `${stats.inputTokens} tokens de entrada` +
-                    `${stats.outputTokens} tokens de salida` 
+                    `${stats.inputTokens} tokens de entrada ` +
+                    `${stats.outputTokens} tokens de salida ` 
                 );
                 rl.close();
                 return;
