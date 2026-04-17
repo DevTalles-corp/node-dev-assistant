@@ -63,3 +63,23 @@ async function reviewFile(filePath: string): Promise<void> {
     console.log("-".repeat(60));
     console.log("Review completada");
 }
+
+const inputArguments = process.argv.slice(2);
+if(inputArguments.length === 0){
+  console.error("Uso: npm run review <ruta-del-archivo>");
+  console.error("Ejemplo: npm run review ./src/config.ts");
+  process.exit(1);
+}
+const filePath = inputArguments[0];
+if(!filePath)
+{
+  console.error("Debes especificar la ruta del archivo a revisar.");
+  process.exit(1);
+}
+
+reviewFile(filePath).catch((error:Error) =>
+  {
+    console.error("Error: ",error.message);
+    process.exit(1);
+  }
+);
