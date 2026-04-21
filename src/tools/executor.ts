@@ -32,7 +32,7 @@ async function collectFiles(dirPath:string,extension?:string): Promise<string[]>
 
     for(const entry of entries)
     {
-        if(entry.name === "node-modules" || entry.name.startsWith("."))
+        if(entry.name === "node_modules" || entry.name.startsWith("."))
         {
             continue;
         }
@@ -50,4 +50,34 @@ async function collectFiles(dirPath:string,extension?:string): Promise<string[]>
         }
     }
     return results;
+}
+
+
+async function executeListFiles(params: {
+    path: string,
+    extension?: string
+}): Promise<string>{
+    const securePath = resolveSecurePath(params.path);
+    if(!securePath)
+        {
+            return `Error de seguridad: la ruta "${params.path}" intenta acceder fuera del proyecto.`
+        }
+    try {
+        const stat = await fs.stat(securePath);
+        if(!stat.isDirectory())
+        {
+            return `Error: ${params.path} no es un directorio.`
+        }
+    } catch  {
+        return `Error: el directorio ${params.path} no existe.`
+    }
+
+    const files = await collectFiles(securePath, params.extension);
+    if(files.length === 0 )
+    {
+        const filterFile = params.extension ? ` con extensión ${params.extension}`:"";
+        return `No se encontraron archivos${filterFile} en "${params.path}"`;
+    }
+    const relativePaths = files.map((file) => path.relative(PROJECT_ROOT, file));
+    return relativePaths.join("\\n");
 }
