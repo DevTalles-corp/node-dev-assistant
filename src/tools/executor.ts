@@ -81,3 +81,44 @@ async function executeListFiles(params: {
     const relativePaths = files.map((file) => path.relative(PROJECT_ROOT, file));
     return relativePaths.join("\\n");
 }
+
+async function executeReadFile(params:
+    {
+        file_path:string
+    }
+):Promise<string>{
+    const securePath = resolveSecurePath(params.file_path);
+    if(!securePath)
+        {
+            return `Error de seguridad: la ruta "${params.file_path}" intenta acceder fuera del proyecto.`
+        }
+    try {
+        const stat = await fs.stat(securePath);
+        if(stat.isDirectory())
+        {
+            return `Error: ${params.file_path} es un directorio, no un archivo.`
+        }
+
+        if(stat.size > MAX_FILE_SIZE)
+        {
+            return ` Archivo demasiado grande (${stat.size} bytes) `+
+                    `Considera leer una sección en especifico.`
+        }
+        const content = await fs.readFile(securePath,"utf-8");
+        if(content.length > MAX_FILE_SIZE)
+        {
+            return content.slice(0, MAX_FILE_SIZE) + "\\n\\n... [archivo truncado]";
+        }
+        return content;
+
+
+    } catch(error)  {
+        const err = error as NodeJS.ErrnoException;
+        if(err.code === "ENOENT")
+        {
+            return `Error: el archivo ${params.file_path} no existe.`
+        }
+          return `Error al leer el archivo ${params.file_path}.`
+        
+    }
+}
