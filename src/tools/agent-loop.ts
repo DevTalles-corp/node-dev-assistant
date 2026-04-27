@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ToolDefinition } from "../types.js";
 import { TOOL_DEFINITIONS } from "./definitions.js";
+import { client } from "../llm/anthropic-client.js";
+import config from "../config.js";
 
 const MAX_ITERATIONS = 10;
 
@@ -13,4 +15,27 @@ export async function runWithTools(
     { role: "user", content: prompt },
   ];
   const sdkTools = (tools ?? TOOL_DEFINITIONS) as Anthropic.Messages.Tool[];
+
+  for (let interation = 0; interation < MAX_ITERATIONS; interation++) {
+    console.log(`\nPensando... (iteración ${interation + 1})`);
+
+    const response = await client.messages.create({
+      model: config.anthropicModel,
+      max_tokens: 4096,
+      ...(systemPrompt && { system: systemPrompt }),
+      tools: sdkTools,
+      messages,
+    });
+    if (response.stop_reason === "end_turn") {
+      const finalText = response.content
+        .filter(
+          (block): block is Anthropic.Messages.TextBlock =>
+            block.type === "text",
+        )
+        .map((block) => block.text)
+        .join("\n");
+      console.log("Respuesta final generada\n");
+      return finalText;
+    }
+  }
 }
