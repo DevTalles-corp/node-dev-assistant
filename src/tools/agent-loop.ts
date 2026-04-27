@@ -45,13 +45,13 @@ export async function runWithTools(
         content: response.content,
       });
 
-      const toolUseBlock = response.content.filter(
+      const toolUseBlocks = response.content.filter(
         (block): block is Anthropic.Messages.ToolUseBlock =>
           block.type === "tool_use",
       );
 
       const results = await Promise.all(
-        toolUseBlock.map(async (block) => {
+        toolUseBlocks.map(async (block) => {
           console.log(
             `Ejecutando tool: ${block.name} (${JSON.stringify(block.input)})`,
           );
@@ -63,6 +63,36 @@ export async function runWithTools(
           return toolOutput;
         }),
       );
+      const toolResultContent: Anthropic.Messages.ToolResultBlockParam[] =
+        toolUseBlocks.map((block, i) => ({
+          type: "tool_result" as const,
+          tool_use_id: block.id,
+          content: results[i] ?? "Error: resultado vacío",
+        }));
+      messages.push({
+        role: "user",
+        content: toolResultContent,
+      });
+      continue;
     }
+    console.warn(
+      `Stop reason inesperado:${response.stop_reason ?? "desconocido"}`,
+    );
+    const consolidateMessageText = response.content
+      .filter(
+        (block): block is Anthropic.Messages.TextBlock => block.type === "text",
+      )
+      .map((block) => block.text)
+      .join("\n");
+
+    return (
+      consolidateMessageText ||
+      `Sesion terminada: ${response.stop_reason ?? "razón desconocida"}`
+    );
   }
+  console.warn(` Límite de ${MAX_ITERATIONS} iteraciones alcanzado`);
+  return (
+    `Lo siento, no pude completar la tarea en ${MAX_ITERATIONS} iteraciones. ` +
+    ` Intenta una pregunta más específica.`
+  );
 }
