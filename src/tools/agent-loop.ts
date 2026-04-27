@@ -3,6 +3,8 @@ import type { ToolDefinition } from "../types.js";
 import { TOOL_DEFINITIONS } from "./definitions.js";
 import { client } from "../llm/anthropic-client.js";
 import config from "../config.js";
+import { Content } from "openai/resources/skills.js";
+import { executeTool } from "./executor.js";
 
 const MAX_ITERATIONS = 10;
 
@@ -36,6 +38,31 @@ export async function runWithTools(
         .join("\n");
       console.log("Respuesta final generada\n");
       return finalText;
+    }
+    if (response.stop_reason === "tool_use") {
+      messages.push({
+        role: "assistant",
+        content: response.content,
+      });
+
+      const toolUseBlock = response.content.filter(
+        (block): block is Anthropic.Messages.ToolUseBlock =>
+          block.type === "tool_use",
+      );
+
+      const results = await Promise.all(
+        toolUseBlock.map(async (block) => {
+          console.log(
+            `Ejecutando tool: ${block.name} (${JSON.stringify(block.input)})`,
+          );
+          const toolOutput = await executeTool(
+            block.name,
+            block.input as Record<string, unknown>,
+          );
+          console.log(`Herramienta completada: ${block.name}`);
+          return toolOutput;
+        }),
+      );
     }
   }
 }
