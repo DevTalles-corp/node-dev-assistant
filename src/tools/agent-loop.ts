@@ -3,7 +3,6 @@ import type { ToolDefinition } from "../types.js";
 import { TOOL_DEFINITIONS } from "./definitions.js";
 import { client } from "../llm/anthropic-client.js";
 import config from "../config.js";
-import { Content } from "openai/resources/skills.js";
 import { executeTool } from "./executor.js";
 
 const MAX_ITERATIONS = 10;
