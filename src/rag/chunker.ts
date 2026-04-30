@@ -93,3 +93,33 @@ export function chunkMardown(content: string, filePath: string): Chunk[] {
   }
   return chunks;
 }
+
+export async function processDirectory(dirPath: string): Promise<Chunk[]> {
+  const allChunks: Chunk[] = [];
+  let entries;
+  try {
+    entries = await fs.readdir(dirPath, { withFileTypes: true });
+  } catch {
+    throw new Error(`No se pudo leer el directorio: ${dirPath}`);
+  }
+  const makdownFiles = entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  for (const file of makdownFiles) {
+    const fullPath = path.join(dirPath, file.name);
+
+    let content: string;
+    try {
+      content = await fs.readFile(fullPath, "utf-8");
+    } catch {
+      console.warn(`No se pudo leer: ${file.name}`);
+      continue;
+    }
+
+    const chunks = chunkMardown(content, file.name);
+    allChunks.push(...chunks);
+    console.log(`Procesando ${file.name}... ${chunks.length} chunks generados`);
+  }
+  return allChunks;
+}
