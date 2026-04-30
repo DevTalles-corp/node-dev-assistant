@@ -20,5 +20,25 @@ export function chunkMardown(content: string, filePath: string): Chunk[] {
     const firstLine = lines[0] ?? "";
     const isHeading = firstLine.startsWith("## ");
     const heading = isHeading ? firstLine.trim() : "(Introducción)";
+
+    if (section.length <= MAX_CHUNK_SIZE) {
+      const chunkContent = lastParagraph
+        ? `${lastParagraph}\n\n${section.trim()}`
+        : section.trim();
+      chunks.push({
+        id: `${fileName}-${globalPosition}`,
+        content: chunkContent,
+        metadata: {
+          source: fileName,
+          heading,
+          position: globalPosition,
+          charCount: chunkContent.length,
+        },
+      });
+      const paragraphs = section.trim().split(/\n\n/);
+      lastParagraph = paragraphs[paragraphs.length - 1] ?? "";
+      globalPosition++;
+      continue;
+    }
   }
 }
