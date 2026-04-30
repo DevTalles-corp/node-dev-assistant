@@ -35,10 +35,39 @@ export function chunkMardown(content: string, filePath: string): Chunk[] {
           charCount: chunkContent.length,
         },
       });
-      const paragraphs = section.trim().split(/\n\n/);
+      const paragraphs = section.trim().split(/\n\n+/);
       lastParagraph = paragraphs[paragraphs.length - 1] ?? "";
       globalPosition++;
       continue;
+    }
+    const paragraphs = section.split(/\n\n+/).filter((p) => p.length > 0);
+    let currentChunk = lastParagraph ? `${lastParagraph}\n\n` : "";
+    for (let index = 0; index < paragraphs.length; index++) {
+      const paragraph = paragraphs[index] ?? "";
+      if (
+        currentChunk.length > 0 &&
+        currentChunk.length + paragraph.length > MAX_CHUNK_SIZE
+      ) {
+        const chunkContent = isHeading
+          ? `${heading}\n\n${currentChunk.trim()}`
+          : currentChunk.trim();
+        chunks.push({
+          id: `${fileName}-${globalPosition}`,
+          content: chunkContent,
+          metadata: {
+            source: fileName,
+            heading,
+            position: globalPosition,
+            charCount: chunkContent.length,
+          },
+        });
+
+        const chunkParagraphs = currentChunk.trim().split(/\n\n+/);
+        lastParagraph = chunkParagraphs[chunkParagraphs.length - 1] ?? "";
+        currentChunk = `${lastParagraph}\n\n`;
+        globalPosition++;
+      }
+      currentChunk += paragraph + "\n\n";
     }
   }
 }
