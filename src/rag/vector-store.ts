@@ -78,4 +78,44 @@ export class VectorStore {
     );
     insertEmbedding.run(chunk.id, serializeEmbedding(embedding));
   }
+  search(queryEmbedding: number[], topk: number): SearchResult[] {
+    const stmt = this.db.prepare(`
+      SELECT c.id, c.source, c.heading, c.position, c.char_count, e.distance
+      FROM chunk_embeddings e
+      JOIN chunks c ON c.id = e.chunk_id
+      WHERE e.emddings MATCH ?
+      AND k = ?
+      ORDER BY e.distance
+      `);
+    const rows = stmt.all(
+      serializeEmbedding(queryEmbedding),
+      topk,
+    ) as SearchRow[];
+    return rows.map((row) => ({
+      chunk: {
+        id: row.id,
+        content: row.content,
+        metadata: {
+          source: row.source,
+          heading: row.heading,
+          position: row.position,
+          charCount: row.char_count,
+        },
+      },
+      score: 1 - row.distance / 2,
+    }));
+  }
+  clear(): void {
+    this.db.exec("DELETE FROM chunk_embeddings");
+    this.db.exec("DELETE FROM chunks");
+  }
+  get size(): number {
+    const row = this.db
+      .prepare(`SELECT COUNT(*) as count FROM chunks`)
+      .get() as { count: number };
+    return row.count;
+  }
+  close(): void {
+    this.db.close();
+  }
 }
