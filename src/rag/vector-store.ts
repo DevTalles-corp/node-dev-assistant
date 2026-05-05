@@ -43,7 +43,7 @@ export class VectorStore {
         source TEXT NOT NULL,
         heading TEXT NOT NULL,
         position INTEGER NOT NULL,
-        char_count INTEGER NOT NULL,
+        char_count INTEGER NOT NULL
       )
       `);
 
