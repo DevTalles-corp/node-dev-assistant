@@ -54,4 +54,28 @@ export class VectorStore {
       )
       `);
   }
+  insert(chunk: Chunk, embedding: number[]): void {
+    const insertChunk = this.db.prepare(`
+      INSERT OR REPLACE INTO chunks
+      (id,content,source,heading,position,char_count)
+      VALUES(?,?,?,?,?,?)
+      `);
+    insertChunk.run(
+      chunk.id,
+      chunk.content,
+      chunk.metadata.source,
+      chunk.metadata.heading,
+      chunk.metadata.position,
+      chunk.metadata.charCount,
+    );
+
+    const insertEmbedding = this.db.prepare(
+      `
+      INSERT OR REPLACE INTO chunk_embeddings
+      (chunk_id,embedding)
+      VALUES(?,?)
+      `,
+    );
+    insertEmbedding.run(chunk.id, serializeEmbedding(embedding));
+  }
 }
