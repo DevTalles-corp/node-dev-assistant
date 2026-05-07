@@ -80,10 +80,10 @@ export class VectorStore {
   }
   search(queryEmbedding: number[], topk: number): SearchResult[] {
     const stmt = this.db.prepare(`
-      SELECT c.id, c.source, c.heading, c.position, c.char_count, e.distance
+      SELECT c.id, c.content, c.source, c.heading, c.position, c.char_count, e.distance
       FROM chunk_embeddings e
       JOIN chunks c ON c.id = e.chunk_id
-      WHERE e.emddings MATCH ?
+      WHERE e.embedding MATCH ?
       AND k = ?
       ORDER BY e.distance
       `);

@@ -2,7 +2,6 @@ import * as readline from "readline";
 import { Conversation } from "./conversation.js";
 import { DOCUMENTATION_ASSISTANT_PROMPT } from "../llm/prompts.js";
 import { TOOL_DEFINITIONS } from "../tools/definitions.js";
-import { runWithTools } from "../tools/agent-loop.js";
 import { processDirectory } from "../rag/chunker.js";
 import { generateEmbeddings } from "../rag/embeddings.js";
 import config from "../config.js";
