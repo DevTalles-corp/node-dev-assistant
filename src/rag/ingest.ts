@@ -55,3 +55,4 @@ export async function runIngest(
 runIngest().catch((error: Error) => {
   console.error(`Error durante la ingestión ${error.message}`);
 });
+

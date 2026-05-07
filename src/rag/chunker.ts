@@ -123,3 +123,4 @@ export async function processDirectory(dirPath: string): Promise<Chunk[]> {
   }
   return allChunks;
 }
+
