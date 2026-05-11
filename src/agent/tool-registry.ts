@@ -1,6 +1,7 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { ToolDefinition } from "../types.js";
+import { retrieveContext } from "../rag/retriever.js";
 
 // === Definiciones de las 2 tools nuevas ===
 
@@ -61,3 +62,31 @@ const CREATE_ISSUE_TOOL: ToolDefinition = {
     required: ["title", "description"],
   },
 };
+
+async function executeSearchDocs(params: {
+  query: string;
+  top_k?: number;
+}): Promise<string> {
+  try {
+    const topK = Math.min(params.top_k ?? 5, 10);
+    const chunks = await retrieveContext(params.query, topK);
+    if (chunks.length === 0) {
+      return (
+        "No se encontraron documentos relevantes para esta consulta" +
+        "Asegúrate de haber ingestado documentación con el comando /ingest"
+      );
+    }
+    const results = chunks
+      .map((chunk) => {
+        const source = chunk.metadata.source;
+        const section = chunk.metadata.heading;
+        const score = (chunk.score * 100).toFixed(0);
+        return `[FUENTE: ${source} | Sección: ${section} | Relevancia: ${score}%\n${chunk.content}]`;
+      })
+      .join("\n\n---\n\n");
+    return `Se econtraron ${chunks.length} fragmentos relevantes:\n\n${results}`;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return `Error al buscar en la documentación: ${message}`;
+  }
+}
