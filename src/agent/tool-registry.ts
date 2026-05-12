@@ -2,6 +2,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { ToolDefinition } from "../types.js";
 import { retrieveContext } from "../rag/retriever.js";
+import { TOOL_DEFINITIONS } from "../tools/definitions.js";
 
 // === Definiciones de las 2 tools nuevas ===
 
@@ -84,9 +85,53 @@ async function executeSearchDocs(params: {
         return `[FUENTE: ${source} | Sección: ${section} | Relevancia: ${score}%\n${chunk.content}]`;
       })
       .join("\n\n---\n\n");
-    return `Se econtraron ${chunks.length} fragmentos relevantes:\n\n${results}`;
+    return `Se encontraron ${chunks.length} fragmentos relevantes:\n\n${results}`;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return `Error al buscar en la documentación: ${message}`;
   }
 }
+async function executeCreateIsuue(params: {
+  title: string;
+  description: string;
+  labels?: string[];
+  priority?: string;
+}): Promise<string> {
+  try {
+    const issuesDir = "./issues";
+    await fs.mkdir(issuesDir, { recursive: true });
+
+    const existingFiles = await fs.readdir(issuesDir);
+    const existingIssues = existingFiles.filter((file) => file.endsWith(".md"));
+    const issueNumber = existingIssues.length + 1;
+
+    const formattedNumber = String(issueNumber).padStart(3, "0");
+    const fileName = `issue-${formattedNumber}`;
+    const fullPath = path.join(issuesDir, fileName);
+
+    const date = new Date().toISOString().substring(0, 10);
+    const labelsStr = params.labels?.join(", ") ?? "sin etiquetas";
+    const priority = params.priority ?? "medium";
+    const content = `# Issue #${issueNumber}: ${params.title}
+      ## Metadata
+      - **Fecha:** ${date}
+      - **Prioridad:** ${priority}
+      - **Etiquetas:** ${labelsStr}
+      - **Estado:** abierto
+      ## Descripción
+      ${params.description}
+      ---
+      *Issue creado automáticamente por DevAssistant*
+      `;
+    await fs.writeFile(fullPath, content, "utf-8");
+    return `Issue creado satisfactoriamente: ${fullPath}\nTítulo: ${params.title}`;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return `Error al crear el issue: ${message}`;
+  }
+}
+export const ALL_TOOL_DEFINITIONS: ToolDefinition[] = [
+  ...TOOL_DEFINITIONS,
+  SEARCH_DOCS_TOOL,
+  CREATE_ISSUE_TOOL,
+];
