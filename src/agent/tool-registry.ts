@@ -3,6 +3,7 @@ import * as path from "path";
 import { ToolDefinition } from "../types.js";
 import { retrieveContext } from "../rag/retriever.js";
 import { TOOL_DEFINITIONS } from "../tools/definitions.js";
+import { executeTool } from "../tools/executor.js";
 
 // === Definiciones de las 2 tools nuevas ===
 
@@ -135,3 +136,28 @@ export const ALL_TOOL_DEFINITIONS: ToolDefinition[] = [
   SEARCH_DOCS_TOOL,
   CREATE_ISSUE_TOOL,
 ];
+export async function executeAnyTool(
+  name: string,
+  params: Record<string, unknown>,
+): Promise<string> {
+  switch (name) {
+    case "list_files":
+    case "read_file":
+    case "search_code":
+      return executeTool(name, params);
+    case "search_docs":
+      return executeSearchDocs(params as { query: string; top_k?: number });
+    case "create_issue":
+      return executeCreateIsuue(
+        params as {
+          title: string;
+          description: string;
+          labels?: string[];
+          priority?: string;
+        },
+      );
+    default:
+      return `Error: tool desconocida: "${name}".
+              Tools disponibles: list_files, read_file, search_code, search_docs, create_issue`;
+  }
+}
