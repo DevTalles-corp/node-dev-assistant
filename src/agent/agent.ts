@@ -149,6 +149,47 @@ export class DevAssistantAgent {
         });
         continue;
       }
+      console.warn(
+        `Stop reason inesperado: ${response.stop_reason ?? "desconocido"}`,
+      );
+      const unexpectedText = response.content
+        .filter(
+          (block): block is Anthropic.Messages.TextBlock =>
+            block.type === "text",
+        )
+        .map((block) => block.text)
+        .join("\n");
+      const unexpectedMessage =
+        unexpectedText ||
+        `Sesión terminada inesperadamente: ${response.stop_reason ?? "razón desconocida"}`;
+      this.messages.push({
+        role: "assistant",
+        content: unexpectedMessage,
+      });
+      return {
+        text: unexpectedMessage,
+        toolsUsed,
+        inputTokens: inputTokensThisTurn,
+        outputTokens: outputTokensThisTurn,
+      };
     }
+    console.warn(
+      `Límite de ${MAX_TOOL_CALLS} tool calls alcanzado en este turno`,
+    );
+    const limitMessage =
+      `He alcanzado el límite de ${MAX_TOOL_CALLS} llamadas a herramientas por turno. ` +
+      `Para completar esta tarea, intenta dividirla en preguntas más específicas.`;
+
+    this.messages.push({
+      role: "assistant",
+      content: limitMessage,
+    });
+
+    return {
+      text: limitMessage,
+      toolsUsed,
+      inputTokens: inputTokensThisTurn,
+      outputTokens: outputTokensThisTurn,
+    };
   }
 }
