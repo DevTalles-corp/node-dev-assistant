@@ -192,4 +192,23 @@ export class DevAssistantAgent {
       outputTokens: outputTokensThisTurn,
     };
   }
+  clearHistory(): void {
+    this.messages = [];
+    this.turns = 0;
+    this.toolCallsLastTurn = 0;
+    console.log("Historial del agente limpiado");
+  }
+  getStats(): {
+    inputTokens: number;
+    outputTokens: number;
+    turns: number;
+    toolCallsLastTurn: number;
+  } {
+    return {
+      inputTokens: this.totalInputTokens,
+      outputTokens: this.totalOutputTokens,
+      turns: this.turns,
+      toolCallsLastTurn: this.toolCallsLastTurn,
+    };
+  }
 }
