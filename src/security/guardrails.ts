@@ -20,4 +20,13 @@ export class RateLimiter {
     this.timestamps.push(now);
     return true;
   }
+  reset(): void {
+    this.timestamps = [];
+  }
+  get remaining(): number {
+    const now = Date.now();
+    const windowStart = now - this.config.windowMs;
+    const active = this.timestamps.filter((t) => t > windowStart).length;
+    return Math.max(0, this.config.maxRequests - active);
+  }
 }
