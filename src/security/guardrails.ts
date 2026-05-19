@@ -126,3 +126,39 @@ export function detectPromptInjection(input: string): {
   }
   return { detected: false };
 }
+export function checkGuardrails(
+  input: string,
+  rateLimiter: RateLimiter,
+): GuardrailResult {
+  const sanitized = sanitizeInput(input);
+  const injectionCheck = detectPromptInjection(input);
+  if (injectionCheck.detected) {
+    console.warn(`Prompt injection detectado: ${injectionCheck.pattern}`);
+    return {
+      safe: false,
+      reason:
+        "Tu mensaje contiene patrones que intentan modificar el comportamiento del asistente.\n" +
+        "Por favor reformula tu pregunta.",
+      sanitized,
+    };
+  }
+  if (!rateLimiter.check()) {
+    console.warn(`Rate limit alcanzado`);
+    return {
+      safe: false,
+      reason:
+        `Demasiadas solicitudes en poco tiempo.\n` +
+        `Espera un momento antes de continuar. (Restantes: ${rateLimiter.remaining})`,
+      sanitized,
+    };
+  }
+  return { safe: true, sanitized };
+}
+export function createRateLimiter(
+  config?: Partial<RateLimiterConfig>,
+): RateLimiter {
+  return new RateLimiter({
+    maxRequests: config?.maxRequests ?? 10,
+    windowMs: config?.windowMs ?? 60_000,
+  });
+}
