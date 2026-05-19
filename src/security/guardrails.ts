@@ -102,3 +102,16 @@ const INJECTION_PATTERNS: Array<{ name: string; regex: RegExp }> = [
     regex: /sin\s+(ninguna\s+)?(restricci[oó]n|l[ií]mite|instrucci[oó]n)/i,
   },
 ];
+export function sanitizeInput(input: string): string {
+  const MAX_LENGTH = 8_000;
+  let result = input
+    .replace(/\0/g, "") // Null bytes eliminados
+    .replace(/\n{3,}/g, "\n\n") // se permite solo dos saltos de línea
+    .replace(/[\x00-\x1F\x7F]/g, ""); // Chars de control eliminados
+  if (result.length > MAX_LENGTH) {
+    result =
+      result.slice(0, MAX_LENGTH) +
+      "\nExcedía el límite — cortado a 8000 chars";
+  }
+  return result;
+}
