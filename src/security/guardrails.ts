@@ -115,3 +115,14 @@ export function sanitizeInput(input: string): string {
   }
   return result;
 }
+export function detectPromptInjection(input: string): {
+  detected: boolean;
+  pattern?: string;
+} {
+  for (const { name, regex } of INJECTION_PATTERNS) {
+    if (regex.test(input)) {
+      return { detected: true, pattern: name };
+    }
+  }
+  return { detected: false };
+}
