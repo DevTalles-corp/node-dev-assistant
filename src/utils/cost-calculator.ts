@@ -46,7 +46,7 @@ export function calculateCost(usage: TokenUsage): CostBreakdown {
   }
   const activePricing = pricing ?? FALLBACK_PRICING;
   const inputCost = (usage.inputTokens / 1_000_000) * activePricing!.input;
-  const outputCost = (usage.outputTokens / 1_000_000) * activePricing!.input;
+  const outputCost = (usage.outputTokens / 1_000_000) * activePricing!.output;
   const totalCost = inputCost + outputCost;
   return {
     inputCost,
