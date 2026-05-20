@@ -15,3 +15,23 @@ const PRICING: Record<string, { input: number; output: number }> = {
 };
 
 const FALLBACK_PRICING = PRICING["claude-sonnet-4-6"];
+
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  model: string;
+}
+export interface CostBreakdown {
+  inputCost: number;
+  outputCost: number;
+  totalCost: number;
+  model: string;
+  formatted: string;
+}
+
+function formatUSD(amount: number): string {
+  if (amount === 0) return `$0.00`;
+  if (amount < 0.001) return `< $0.001`;
+  if (amount < 0.01) return `$${amount.toFixed(4)}`;
+  return `$${amount.toFixed(4)}`;
+}
