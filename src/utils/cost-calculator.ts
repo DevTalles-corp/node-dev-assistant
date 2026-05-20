@@ -35,3 +35,24 @@ function formatUSD(amount: number): string {
   if (amount < 0.01) return `$${amount.toFixed(4)}`;
   return `$${amount.toFixed(4)}`;
 }
+
+export function calculateCost(usage: TokenUsage): CostBreakdown {
+  const pricing = PRICING[usage.model];
+  if (!pricing) {
+    console.warn(
+      `Modelo ${usage.model} no tiene precio definido.\n` +
+        `Usando Claude Sonnet como estimación. Actualiza PRICING en cost-calculator.ts`,
+    );
+  }
+  const activePricing = pricing ?? FALLBACK_PRICING;
+  const inputCost = (usage.inputTokens / 1_000_000) * activePricing!.input;
+  const outputCost = (usage.outputTokens / 1_000_000) * activePricing!.input;
+  const totalCost = inputCost + outputCost;
+  return {
+    inputCost,
+    outputCost,
+    totalCost,
+    model: usage.model,
+    formatted: formatUSD(totalCost),
+  };
+}
