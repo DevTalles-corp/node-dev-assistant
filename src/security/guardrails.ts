@@ -83,7 +83,11 @@ const INJECTION_PATTERNS: Array<{ name: string; regex: RegExp }> = [
   },
   {
     name: "actúa como (es)",
-    regex: /actúa\s+(como\s+si\s+)?(fueras?|eres)\s+/i,
+    regex: /act[uú]a\s+(como\s+si\s+)?(fueras?|eres)\s+/i,
+  },
+  {
+    name: "actúa como (es)",
+    regex: /act[uú]a\s+como\s+/i,
   },
   {
     name: "nuevas instrucciones (es)",

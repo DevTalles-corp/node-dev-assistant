@@ -6,6 +6,7 @@ import { VectorStore } from "../rag/vector-store.js";
 import { resetStore } from "../rag/retriever.js";
 import { DevAssistantAgent } from "../agent/agent.js";
 import { ALL_TOOL_DEFINITIONS } from "../agent/tool-registry.js";
+import { checkGuardrails, createRateLimiter } from "../security/guardrails.js";
 
 async function ingestDocs(docsPath: string): Promise<void> {
   console.log(`\nIniciando ingestión desde: ${docsPath}`);
@@ -43,6 +44,7 @@ export async function startCLI(): Promise<void> {
     output: process.stdout,
   });
   const devAssistantAgent = new DevAssistantAgent();
+  const rateLimiter = createRateLimiter();
 
   console.log("╔════════════════════════════════════════╗");
   console.log("║         DevAssistant v1.0              ║");
@@ -121,10 +123,20 @@ export async function startCLI(): Promise<void> {
         return;
       }
       try {
+        const guardrail = checkGuardrails(userInput, rateLimiter);
+        if (!guardrail.safe) {
+          console.log(`\n${guardrail.reason}`);
+          promptUser();
+          return;
+        }
+        const secureText = guardrail.sanitized;
         process.stdout.write(`\nDevAssitantAgent: `);
-        const response = await devAssistantAgent.chat(userInput, (fragment) => {
-          process.stdout.write(fragment);
-        });
+        const response = await devAssistantAgent.chat(
+          secureText,
+          (fragment) => {
+            process.stdout.write(fragment);
+          },
+        );
         process.stdout.write(`\n`);
         if (response.toolsUsed.length > 0) {
           const uniqueTools = [...new Set(response.toolsUsed)];
